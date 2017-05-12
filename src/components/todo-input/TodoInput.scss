@@ -1,0 +1,21 @@
+.MyApp-TodoInput {
+    input {
+        margin-right: 10px;
+        border-radius: 3px;
+        border: 1px solid black;
+        padding: 5px;
+    }
+
+    button {
+        padding: 5px 10px;
+        border-radius: 3px;
+        background-color: #00b6ff;
+        cursor: pointer;
+        color: white;
+        border: none;
+
+        &:active {
+            background-color: blue;
+        }
+    }
+}

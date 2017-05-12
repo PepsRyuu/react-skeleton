@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tests</title>
+    <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script src="../node_modules/sinon/pkg/sinon.js"></script>
+    <style>
+        #coverage_report {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background-color: white;
+            z-index: 2;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #coverage_report_files {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 400px;
+            bottom: 0;
+            background-color: #ccc;
+            overflow-y: auto;
+        }
+
+        #coverage_report_files label {
+            position: relative;
+            height: 34px;
+            box-sizing: border-box;
+            line-height: 34px;
+            vertical-align: middle;
+            cursor: pointer;
+            width: 100%;
+            display: block;
+        }
+
+        #coverage_report_files input {
+            display: none;
+        }
+
+        #coverage_report_files span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 0 10px;
+        }
+
+        #coverage_report_files input:checked + span {
+            background-color: lightblue;
+        }
+
+        #coverage_report_source {
+            position: absolute;
+            top: 0;
+            left: 400px;
+            right: 0;
+            bottom: 0;
+            overflow-y: auto;
+        }
+
+        #coverage_report_source > div {
+            font-family: monospace;
+            white-space: pre;
+            font-size: 14px;
+            padding: 0 10px;
+            display: flex;
+        }
+
+        #coverage_report_close {
+            font-size: 24px;
+            font-weight: bold;
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            cursor: pointer;
+            display: inline-block;
+                }
+    </style>
+    <script>
+        window.ConsoleReporterResults = {
+            passes: 0,
+            fails: 0
+        };
+
+        function ConsoleReporter(runner) {
+            runner.on('pass', function (test) {
+                window.ConsoleReporterResults.passes++;
+                console.log('PASS: ' + test.fullTitle());
+            });
+
+            runner.on('fail', function (test, err) {
+                window.ConsoleReporterResults.fails++;
+                console.log('FAIL: ' + test.fullTitle());
+                console.log('      ' + err);
+            });
+
+            runner.on('end', function () {
+                console.log('');
+                console.log('# Passes: ' + window.ConsoleReporterResults.passes);
+                console.log('# Fails: ' + window.ConsoleReporterResults.fails);
+                console.log('---TEST END---');
+            });
+        }
+    </script>
+</head>
+<body>
+    <div id="mocha"></div>
+    <div id="coverage_report">
+        <div id="coverage_report_files"></div>
+        <div id="coverage_report_source"></div>
+        <div id="coverage_report_close">X</div>
+    </div>
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            console.log(msg);
+            console.log('line: ' + lineNo);
+            console.log('col: ' + columnNo);
+            console.log('url: ' + url)
+        }
+
+        if (window.navigator.userAgent.toLowerCase().indexOf('phantom') > -1) {
+            mocha.setup({ui: 'bdd', reporter: ConsoleReporter});
+        } else {
+            mocha.setup({ui: 'bdd'});
+        }
+    </script>
+    <script src="/test.bundle.js"></script>
+    <script>
+        function showCoverageReport () {
+            var cov = window.__coverage__;
+            coverage_report.style.display = 'block';
+            coverage_report_files.innerHTML = '';
+            for (var prop in cov) {
+                var el = document.createElement('label');
+                el.innerHTML = [
+                    '<input type="radio" name="coverage_file" onchange="showCoverageSource(\'' + prop.replace(/\\/g, '\\\\') + '\')">',
+                    '<span>' + prop.substring(prop.indexOf('src')) + '</span>'
+                ].join('\n');
+                coverage_report_files.appendChild(el);
+            }
+        }
+
+        function showCoverageSource(file) {
+            var cov = window.__coverage__[file];
+            coverage_report_source.innerHTML = '';
+            var code = cov.code.split('\n');
+
+            var totalLines = code.length;
+            var lineNumberWidth = totalLines.toString().length * 8 + 30;
+
+            var lineEls = [];
+            for (var i = 0; i < code.length; i++) {
+                var el = document.createElement('div');
+
+                var lineNumberSpan = document.createElement('span');
+                lineNumberSpan.textContent = (i + 1);
+                lineNumberSpan.style.width = lineNumberWidth + 'px';
+                el.appendChild(lineNumberSpan);
+                var lineContent = document.createElement('span');
+                lineContent.textContent = code[i];
+                el.appendChild(lineContent);
+
+                coverage_report_source.appendChild(el);
+                lineEls.push(el);
+            }
+
+            var sLength = Object.keys(cov.s).length;
+            for (var i = 0; i < sLength; i++) {
+                var start = cov.statementMap[i].start.line - 1;
+                var end = cov.statementMap[i].end.line - 1;
+
+                for (var j = start; j <= end; j++) {
+                    lineEls[j].style.backgroundColor = cov.s[i] > 0 ? 'lightgreen' : '#FFCCCC';
+                    lineEls[j].setAttribute('data-covered', '' + cov.s[i] > 0);
+                }
+            }
+            
+            // Branch coverage, partial coverage should be yellow. Uncovered lines should be red?
+            var bLength = Object.keys(cov.b).length;
+            for (var i = 0; i < bLength; i++) {
+                var bEntry = cov.b[i];
+                for (var j = 0; j < bEntry.length; j++) {
+                    if (bEntry[j] === 0) {
+                        var line = cov.branchMap[i].locations[j].start.line - 1;
+                        var el = lineEls[line];
+                        el.style.backgroundColor = el.getAttribute('data-covered') === 'true'? 'yellow' : '#FFCCCC';
+                    }
+                }
+            }
+        }
+
+        function calculateCoverage () {
+            var totalLines = 0;
+            var linesCovered = 0;
+            var cov = window.__coverage__;
+
+            for (var file in cov) {
+                totalLines += Object.keys(cov[file].s).length;
+                linesCovered += Object.keys(cov[file].s).filter(function(n) { return cov[file].s[n] > 0}).length;
+            }
+
+            return Math.floor(linesCovered / totalLines * 100);
+        }
+
+        mocha.run(function () {
+            // Make it look like the feature is integrated with Mocha. :)
+            var li = document.createElement('li');
+            var anchor = document.createElement('a');
+            anchor.setAttribute('href', 'javascript:void(0)');
+            anchor.textContent = 'line coverage:';
+            anchor.onclick = showCoverageReport;
+            li.appendChild(anchor);
+            var em = document.createElement('em');
+            em.textContent = calculateCoverage() + '%';
+            li.appendChild(em);
+            var parent = document.querySelector('#mocha-stats');
+            parent.insertBefore(li, parent.firstChild);
+
+
+            coverage_report_close.onclick = function () {
+                coverage_report.style.display = 'none';
+            }
+
+        });
+    </script>
+</body>
+</html>
