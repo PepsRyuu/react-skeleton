@@ -3,8 +3,7 @@ var common_config = require('./webpack.common');
 
 process.env.NODE_ENV = 'production';
 
-function createConfig(path, name) {
-    var config = common_config.clone(name);
+function createConfig() {
     var plugins = [
         new webpack.DefinePlugin({
             'process.env': {
@@ -16,38 +15,23 @@ function createConfig(path, name) {
 
     return {
         devtool: 'source-map',
-        entry: path,
+        entry: './src/main.js',
         target: 'web',
-        output: config.output,
-        module: config.loaders,
+        output: common_config.output,
+        module: common_config.loaders,
         plugins: plugins,
-        externals: config.externals
+        externals: common_config.externals
     }
 }
 
-function webpackPromise (config) {
-    return new Promise(function (resolve, reject) {
-        webpack(config).run(function (err, stats) {
-            if (stats.hasErrors()) {
-                console.log(stats.toString("errors-only"));
-                reject();
-            } else {
-                console.log(stats.toString(common_config.stats));
-                resolve();
-            }
-        });
-    })
-}
-
-console.log('Executing webpack...');
-Promise.all([
-    createConfig('./src/main', 'app'),
-    createConfig('./test/main', 'test') 
-].map(webpackPromise)).then(function (results) {
-    console.log('Build complete.');  
-}).catch(() => {
-    process.exit(1);
+webpack(createConfig()).run(function(err, stats) {
+    if (stats.hasErrors()) {
+        console.log(stats.toString("errors-only"));
+        process.exit(1);
+    } else {
+        console.log(stats.toString(common_config.stats));
+        console.log('Build complete.');
+    }
 });
-
 
 

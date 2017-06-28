@@ -2,6 +2,7 @@ import React from 'react';
 import TodoList from '../../src/components/todo-list/TodoList';
 
 describe('TodoList', () => {
+
     it ('should render the items passed in', () => {
         let items = [{
             message: 'item 1'

@@ -1,7 +1,9 @@
-var path = require('path');
-var deepClone = require('lodash.clonedeep');
-
-var config = {
+module.exports = {
+    output: {
+        path: __dirname + '/../target/dist',
+        publicPath: '/',
+        filename: 'app.bundle.js'
+    },
     loaders: {
         rules: [{
             enforce: 'pre',
@@ -11,15 +13,7 @@ var config = {
         }, {
             test: /\.js$/,
             include: /(src|test)/,
-            loader: 'babel-loader',
-            query: {
-                presets: ["react", ["es2015", {"modules": false}]],
-                plugins: [
-                    ["transform-es2015-modules-commonjs-simple", {
-                        "noMangle": true
-                    }]
-                ]
-            }
+            loader: 'babel-loader'
         }, {
             test: /\.scss$/,
             loaders: ['style-loader', 'css-loader', 'sass-loader']
@@ -39,20 +33,3 @@ var config = {
         version: false
     }
 };
-
-module.exports = Object.assign({}, config, {
-    clone: function (name) {
-        var c = deepClone(config);
-        c.output = {
-            path: __dirname + '/../target' + (name === 'test'? '' : '/dist'),
-            publicPath: '/',
-            filename: name + '.bundle.js'
-        };
-
-        if (name === 'test') {
-            c.loaders.rules[1].query.plugins.push('istanbul');
-        }
-
-        return c;
-    }
-});

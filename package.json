@@ -4,7 +4,8 @@
     "clean": "rm -rf target",
     "start": "node bin/webpack.serve.js",
     "build": "npm run clean && node bin/webpack.build.js -p && cp ./public/* ./target/dist/",
-    "test": "npm run build && node bin/test-runner.js"
+    "test": "npm run build && mocha-istanbul-ui test/main.js \"test/cases/*.js\" --console --once",
+    "test:ui": "mocha-istanbul-ui test/main.js \"test/cases/*.js\" "
   },
   "devDependencies": {
     "babel-core": "^6.24.1",
@@ -14,6 +15,7 @@
     "babel-polyfill": "^6.23.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-react": "^6.24.1",
+    "babel-register": "^6.24.1",
     "chai": "^3.5.0",
     "css-loader": "^0.28.1",
     "enzyme": "^2.8.2",
@@ -22,10 +24,8 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-react": "^6.10.3",
     "express": "^4.15.2",
-    "istanbul": "^0.4.5",
-    "mocha": "^3.3.0",
+    "mocha-istanbul-ui": "0.0.3",
     "node-sass": "^4.5.2",
-    "phantomjs-prebuilt": "^2.1.14",
     "react-addons-test-utils": "^15.5.1",
     "react-prototype": "^0.2.1",
     "react-test-renderer": "^15.5.4",
