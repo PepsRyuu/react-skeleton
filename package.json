@@ -3,7 +3,7 @@
   "scripts": {
     "clean": "rm -rf target",
     "start": "node bin/webpack.serve.js",
-    "build": "npm run clean && node bin/webpack.build.js -p && cp ./public/* ./target/dist/",
+    "build": "npm run clean && node bin/webpack.build.js -p && cp -r ./public/ ./target/dist/",
     "test": "npm run build && node bin/test-runner.js"
   },
   "devDependencies": {
